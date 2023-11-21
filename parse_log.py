@@ -1,3 +1,5 @@
+# Copyright 2023 Daniel Jay Haskin
+# IBM DB2 Master log parser script
 import re
 import sys
 import csv
@@ -38,7 +40,6 @@ def db2_log_to_csv(log_file, csv_file):
     # by a three digit number.
     # They are continued when the `first` message has the same continuation
     # number.
-    # Numbers are reused after ~200 lines.
     continuation_lines = {}
 
     # Open a CSV file for writing.
@@ -46,8 +47,6 @@ def db2_log_to_csv(log_file, csv_file):
         writer = csv.DictWriter(f, fieldnames=["timestamp", "stc", "message"])
         writer.writeheader()
         with open(log_file, "r") as g:
-            header = g.readline()
-            spacer = g.readline()
             line_number = 2
             for line in g.readlines():
                 line_number = line_number + 1
@@ -57,6 +56,10 @@ def db2_log_to_csv(log_file, csv_file):
                     FIELD_WIDTHS[0] : FIELD_WIDTHS[0] + FIELD_WIDTHS[1]
                 ]
                 third = line[FIELD_WIDTHS[0] + FIELD_WIDTHS[1] :].strip()
+                time = None
+                day = None
+                month = None
+                year = None
 
                 if first[1] == " ":
                     if first.strip() == "":
