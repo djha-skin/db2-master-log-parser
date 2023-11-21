@@ -46,6 +46,10 @@ def db2_log_to_csv(log_file, csv_file):
     # Open a CSV file for writing.
     with open(csv_file, "w") as f:
 
+        time = None
+        day = None
+        month = None
+        year = None
         writer = csv.DictWriter(f, fieldnames=["timestamp", "stc", "message"])
         writer.writeheader()
         with open(log_file, "r") as g:
@@ -61,10 +65,6 @@ def db2_log_to_csv(log_file, csv_file):
                     FIELD_WIDTHS[0] : FIELD_WIDTHS[0] + FIELD_WIDTHS[1]
                 ]
                 third = line[FIELD_WIDTHS[0] + FIELD_WIDTHS[1] :].strip()
-                time = None
-                day = None
-                month = None
-                year = None
 
                 if first[1] == " ":
                     if first.strip() == "":
