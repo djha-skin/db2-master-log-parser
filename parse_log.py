@@ -1,5 +1,6 @@
 # Copyright 2023 Daniel Jay Haskin
 # IBM DB2 Master log parser script
+
 import re
 import sys
 import csv
@@ -44,11 +45,15 @@ def db2_log_to_csv(log_file, csv_file):
 
     # Open a CSV file for writing.
     with open(csv_file, "w") as f:
+
         writer = csv.DictWriter(f, fieldnames=["timestamp", "stc", "message"])
         writer.writeheader()
         with open(log_file, "r") as g:
+            skip = g.readline()
+            skip = g.readline()
             line_number = 2
             for line in g.readlines():
+                line = line.replace("\0", " ")
                 line_number = line_number + 1
                 first = line[: FIELD_WIDTHS[0]]
 
