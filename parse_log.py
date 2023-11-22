@@ -79,7 +79,7 @@ def db2_log_to_csv(log_file, csv_file):
         year = None
         writer = csv.DictWriter(
             f,
-            delimiter="|",
+            delimiter="\t",
             fieldnames=["timestamp", "stc", "dsn", "subsystem", "message"],
             lineterminator="\n",
         )
