@@ -53,8 +53,8 @@ def db2_log_to_csv(log_file, csv_file):
         writer = csv.DictWriter(f, fieldnames=["timestamp", "stc", "message"])
         writer.writeheader()
         with open(log_file, "r") as g:
-            skip = g.readline()
-            skip = g.readline()
+            g.readline()
+            g.readline()
             line_number = 2
             for line in g.readlines():
                 line = line.replace("\0", " ")
