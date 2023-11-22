@@ -57,7 +57,7 @@ def db2_log_to_csv(log_file, csv_file):
             g.readline()
             line_number = 2
             for line in g.readlines():
-                line = line.replace("\0", " ")
+                #line = line.replace("\0", " ")
                 line_number = line_number + 1
                 first = line[: FIELD_WIDTHS[0]]
 
