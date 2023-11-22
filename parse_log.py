@@ -74,7 +74,7 @@ def db2_log_to_csv(log_file, csv_file):
                             {
                                 "timestamp": f"{year}-{month}-{day}T{time}",
                                 "stc": second.strip(),
-                                "message": third,
+                                "message": third.strip(),
                             }
                         )
                         continue
@@ -114,14 +114,14 @@ def db2_log_to_csv(log_file, csv_file):
                     continuation_lines[continuation_number] = {
                         "timestamp": f"{year}-{month}-{day}T{time}",
                         "stc": second.strip(),
-                        "message": start_of_line,
+                        "message": start_of_line.strip(),
                     }
                 else:
                     writer.writerow(
                         {
                             "timestamp": f"{year}-{month}-{day}T{time}",
                             "stc": second.strip(),
-                            "message": third,
+                            "message": third.strip(),
                         }
                     )
 
