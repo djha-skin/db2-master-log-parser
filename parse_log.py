@@ -9,7 +9,7 @@ import csv
 # 115 + 9 + 9 = 133
 FIELD_WIDTHS = [9, 9, 115]
 
-months = {
+MONTHS = {
     "JAN": 1,
     "FEB": 2,
     "MAR": 3,
@@ -102,7 +102,7 @@ def db2_log_to_csv(log_file, csv_file):
                 if third[0:4] == "----":
                     date = find_date.match(third).groupdict()
                     year = int(date["year"])
-                    month = months[date["month"].upper()]
+                    month = MONTHS[date["month"].upper()]
                     day = int(date["dom"])
                 elif third[-4] == " " and find_number.match(third[-3:]):
                     continuation_number = int(third[-3:])
