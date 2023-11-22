@@ -50,36 +50,37 @@ def db2_log_to_csv(log_file, csv_file):
         day = None
         month = None
         year = None
-        writer = csv.DictWriter(f, fieldnames=["timestamp", "stc", "message"])
+        writer = csv.DictWriter(f, fieldnames=["timestamp", "stc", "message"],
+                                lineterminator="\n")
         writer.writeheader()
         with open(log_file, "r") as g:
             g.readline()
             g.readline()
             line_number = 2
             for line in g.readlines():
-                #line = line.replace("\0", " ")
+                line = line.replace("\0", " ")
                 line_number = line_number + 1
                 first = line[: FIELD_WIDTHS[0]]
 
                 second = line[
                     FIELD_WIDTHS[0] : FIELD_WIDTHS[0] + FIELD_WIDTHS[1]
                 ]
-                third = line[FIELD_WIDTHS[0] + FIELD_WIDTHS[1] :].strip()
+                third = line[FIELD_WIDTHS[0] + FIELD_WIDTHS[1] :].strip("\r\n \t")
 
                 if first[1] == " ":
-                    if first.strip() == "":
+                    if first.strip("\r\n \t") == "":
                         # This is a disgusting corner case.
                         # But I don't know what else to do.
                         writer.writerow(
                             {
                                 "timestamp": f"{year}-{month}-{day}T{time}",
-                                "stc": second.strip(),
-                                "message": third.strip(),
+                                "stc": second.strip("\r\n \t"),
+                                "message": third,
                             }
                         )
                         continue
-                    continuation_number = int(first.strip())
-                    continuation = third.strip()
+                    continuation_number = int(first.strip("\r\n \t"))
+                    continuation = third
                     if continuation_number in continuation_lines:
                         continuation_lines[continuation_number]["message"] = (
                             continuation_lines[continuation_number]["message"]
@@ -97,7 +98,7 @@ def db2_log_to_csv(log_file, csv_file):
                         )
                     continue
                 else:
-                    time = first.strip().replace(".", ":")
+                    time = first.strip("\r\n \t").replace(".", ":")
 
                 if third[0:4] == "----":
                     date = find_date.match(third).groupdict()
@@ -113,15 +114,15 @@ def db2_log_to_csv(log_file, csv_file):
                         )
                     continuation_lines[continuation_number] = {
                         "timestamp": f"{year}-{month}-{day}T{time}",
-                        "stc": second.strip(),
-                        "message": start_of_line.strip(),
+                        "stc": second,
+                        "message": start_of_line.strip("\r\n \t"),
                     }
                 else:
                     writer.writerow(
                         {
                             "timestamp": f"{year}-{month}-{day}T{time}",
-                            "stc": second.strip(),
-                            "message": third.strip(),
+                            "stc": second.strip("\r\n \t"),
+                            "message": third,
                         }
                     )
 
