@@ -53,7 +53,7 @@ def db2_csv_row(year, month, day, time, stc, more):
 
     returned.update(
         {
-            "timestamp": f"{year}-{month}-{day}T{time}",
+            "timestamp": f"{year:04d}-{month:02d}-{day:02d} {time}",
             "stc": stc,
         }
     )
