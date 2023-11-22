@@ -24,6 +24,31 @@ MONTHS = {
     "DEC": 12,
 }
 
+find_kind = re.compile(r"^(?P<kind>\w+) +(?P<message>.*)$")
+
+
+def db2_csv_row(year, month, day, time, stc, more):
+    """
+    Convert a DB2 log line to a CSV row.
+    """
+    matched = find_kind.match(more)
+    if matched is None:
+        returned = {"kind": "", "message": more}
+    else:
+        returned = matched.groupdict()
+
+    # This is to Excel, with love.
+    if len(returned["message"]) > 0 and returned["message"][0] == "=":
+        returned["message"] = "'" + returned["message"]
+
+    returned.update(
+        {
+            "timestamp": f"{year}-{month}-{day}T{time}",
+            "stc": stc,
+        }
+    )
+    return returned
+
 
 def db2_log_to_csv(log_file, csv_file):
     """
@@ -45,13 +70,15 @@ def db2_log_to_csv(log_file, csv_file):
 
     # Open a CSV file for writing.
     with open(csv_file, "w") as f:
-
         time = None
         day = None
         month = None
         year = None
-        writer = csv.DictWriter(f, fieldnames=["timestamp", "stc", "message"],
-                                lineterminator="\n")
+        writer = csv.DictWriter(
+            f,
+            fieldnames=["timestamp", "stc", "kind", "message"],
+            lineterminator="\n",
+        )
         writer.writeheader()
         with open(log_file, "r") as g:
             g.readline()
@@ -64,26 +91,31 @@ def db2_log_to_csv(log_file, csv_file):
 
                 second = line[
                     FIELD_WIDTHS[0] : FIELD_WIDTHS[0] + FIELD_WIDTHS[1]
-                ]
-                third = line[FIELD_WIDTHS[0] + FIELD_WIDTHS[1] :].strip("\r\n \t")
+                ].strip(
+                    "\r\n \t"
+                )
+                third = line[FIELD_WIDTHS[0] + FIELD_WIDTHS[1] :].strip(
+                    "\r\n \t"
+                )
 
                 if first[1] == " ":
                     if first.strip("\r\n \t") == "":
                         # This is a disgusting corner case.
                         # But I don't know what else to do.
                         writer.writerow(
-                            {
-                                "timestamp": f"{year}-{month}-{day}T{time}",
-                                "stc": second.strip("\r\n \t"),
-                                "message": third,
-                            }
-                        )
+                                db2_csv_row(
+                                    year,
+                                    month,
+                                    day,
+                                    time,
+                                    second,
+                                    third))
                         continue
                     continuation_number = int(first.strip("\r\n \t"))
                     continuation = third
                     if continuation_number in continuation_lines:
-                        continuation_lines[continuation_number]["message"] = (
-                            continuation_lines[continuation_number]["message"]
+                        continuation_lines[continuation_number]["more"] = (
+                            continuation_lines[continuation_number]["more"]
                             + " "
                             + continuation
                         )
@@ -110,25 +142,26 @@ def db2_log_to_csv(log_file, csv_file):
                     start_of_line = third[:-4]
                     if continuation_number in continuation_lines:
                         writer.writerow(
-                            continuation_lines[continuation_number]
+                            db2_csv_row(
+                                **continuation_lines[continuation_number])
                         )
                     continuation_lines[continuation_number] = {
-                        "timestamp": f"{year}-{month}-{day}T{time}",
+                        "day": day,
+                        "month": month,
+                        "year": year,
+                        "time": time,
                         "stc": second,
-                        "message": start_of_line.strip("\r\n \t"),
+                        "more": start_of_line.strip("\r\n \t"),
                     }
                 else:
                     writer.writerow(
-                        {
-                            "timestamp": f"{year}-{month}-{day}T{time}",
-                            "stc": second.strip("\r\n \t"),
-                            "message": third,
-                        }
+                        db2_csv_row(year, month, day, time, second, third)
                     )
 
             # Flush remaining lines.
             for number, line in continuation_lines.items():
-                writer.writerow(line)
+                writer.writerow(
+                        db2_csv_row(**line))
 
 
 if __name__ == "__main__":
