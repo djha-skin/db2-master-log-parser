@@ -24,16 +24,16 @@ MONTHS = {
     "DEC": 12,
 }
 
-find_kind = re.compile(r"^(?P<kind>\w+) +(?P<message>.*)$")
+find_dsn = re.compile(r"^(?P<dsn>DSN[\w]+) +(?P<message>.*)$")
 
 
 def db2_csv_row(year, month, day, time, stc, more):
     """
     Convert a DB2 log line to a CSV row.
     """
-    matched = find_kind.match(more)
+    matched = find_dsn.match(more)
     if matched is None:
-        returned = {"kind": "", "message": more}
+        returned = {"dsn": "", "message": more}
     else:
         returned = matched.groupdict()
 
@@ -76,7 +76,7 @@ def db2_log_to_csv(log_file, csv_file):
         year = None
         writer = csv.DictWriter(
             f,
-            fieldnames=["timestamp", "stc", "kind", "message"],
+            fieldnames=["timestamp", "stc", "dsn", "message"],
             lineterminator="\n",
         )
         writer.writeheader()
