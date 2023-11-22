@@ -25,7 +25,7 @@ MONTHS = {
 }
 
 find_dsn = re.compile(r"^(?P<dsn>DSN[\w]+) +(?P<message>.*)$")
-
+find_subsystem = re.compile(r"^=(?P<subsystem>DP\w\w) +(?P<rest>.*)$")
 
 def db2_csv_row(year, month, day, time, stc, more):
     """
@@ -37,9 +37,12 @@ def db2_csv_row(year, month, day, time, stc, more):
     else:
         returned = matched.groupdict()
 
-    # This is to Excel, with love.
-    if len(returned["message"]) > 0 and returned["message"][0] == "=":
-        returned["message"] = "'" + returned["message"]
+    sub_matched = find_subsystem.match(returned["message"])
+    if sub_matched is None:
+        returned["subsystem"] = ""
+    else:
+        returned["subsystem"] = sub_matched.group("subsystem")
+        returned["message"] = sub_matched.group("rest")
 
     returned.update(
         {
@@ -76,7 +79,8 @@ def db2_log_to_csv(log_file, csv_file):
         year = None
         writer = csv.DictWriter(
             f,
-            fieldnames=["timestamp", "stc", "dsn", "message"],
+            delimiter="|",
+            fieldnames=["timestamp", "stc", "dsn", "subsystem", "message"],
             lineterminator="\n",
         )
         writer.writeheader()
