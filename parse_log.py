@@ -4,6 +4,7 @@
 import re
 import sys
 import csv
+#import pprint
 
 
 # 115 + 9 + 9 = 133
@@ -24,18 +25,24 @@ MONTHS = {
     "DEC": 12,
 }
 
-find_dsn = re.compile(r"^(?P<dsn>DSN[\w]+) +(?P<message>.*)$")
+find_msgid = re.compile(r"""^                      # start of line
+                            (?P<msgclass>[A-Z]{3}) # message class
+                            (?P<msgid>\w+) +     # message id
+                            (?P<message>.*)$       # The rest of the line
+                        """,
+                        re.VERBOSE)
 find_subsystem = re.compile(r"^=(?P<subsystem>DP\w\w) +(?P<rest>.*)$")
 
 def db2_csv_row(year, month, day, time, stc, more):
     """
     Convert a DB2 log line to a CSV row.
     """
-    matched = find_dsn.match(more)
+    matched = find_msgid.match(more)
     if matched is None:
-        returned = {"dsn": "", "message": more}
+        returned = {"msgclass": "", "msgid": "", "message": more}
     else:
         returned = matched.groupdict()
+    returned["message"] = returned["message"].strip("\r\n \t")
 
     sub_matched = find_subsystem.match(returned["message"])
     if sub_matched is None:
@@ -50,6 +57,8 @@ def db2_csv_row(year, month, day, time, stc, more):
             "stc": stc,
         }
     )
+    #pprint.pprint(more)
+    #pprint.pprint(returned)
     return returned
 
 
@@ -80,7 +89,7 @@ def db2_log_to_csv(log_file, csv_file):
         writer = csv.DictWriter(
             f,
             delimiter="\t",
-            fieldnames=["timestamp", "stc", "dsn", "subsystem", "message"],
+            fieldnames=["timestamp", "stc", "msgclass", "msgid", "subsystem", "message"],
             lineterminator="\n",
         )
         writer.writeheader()

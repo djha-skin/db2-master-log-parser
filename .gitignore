@@ -2,3 +2,6 @@
 *.LOG
 *.csv
 *.CSV
+*.tsv
+*.TSV
+.slime_paste
