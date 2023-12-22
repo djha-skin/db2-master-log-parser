@@ -129,7 +129,10 @@ class DB2LogParser:
 
             if space_continuation:
                 return self._attempt_process_line(
-                    line.rstrip("\r\n \t") + " " + next_line.strip("\r\n \t")
+                    # I debated on whether to add a space in the middle
+                    # of the continuation line and the previous line.
+                    # I decided against it after looking at the data.
+                    line.rstrip("\r\n \t") + next_line.strip("\r\n \t")
                 )
         if first[1] == " ":
             if first.strip("\r\n \t") == "":
