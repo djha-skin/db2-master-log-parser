@@ -99,12 +99,12 @@ class DB2LogParser:
         # pprint.pprint(returned)
         return returned
 
-    def _flush_continuation_lines(self, writer):
+    def _flush_continuation_lines(self):
         """
         Flush remaining lines.
         """
         for number, line in self.continuation_lines.items():
-            writer.writerow(DB2LogParser._db2_csv_row(**line))
+            self.writer.writerow(DB2LogParser._db2_csv_row(**line))
 
     def _attempt_process_line(self, line):
         next_line = self.reader.readline()
@@ -127,15 +127,15 @@ class DB2LogParser:
                     space_continuation = False
                     break
 
-        if space_continuation:
-            return self._attempt_process_line(
-                line + " " + next_line.strip("\r\n \t")
-            )
+            if space_continuation:
+                return self._attempt_process_line(
+                    line.rstrip("\r\n \t") + " " + next_line.strip("\r\n \t")
+                )
         if first[1] == " ":
             if first.strip("\r\n \t") == "":
                 # This is a disgusting corner case.
                 # But I don't know what else to do.
-                writer.writerow(
+                self.writer.writerow(
                     DB2LogParser._db2_csv_row(
                         self.current_line_year,
                         self.current_line_month,
@@ -149,9 +149,9 @@ class DB2LogParser:
 
             continuation_number = int(first.strip("\r\n \t"))
             continuation = third
-            if continuation_number in continuation_lines:
-                continuation_lines[continuation_number]["more"] = (
-                    continuation_lines[continuation_number]["more"]
+            if continuation_number in self.continuation_lines:
+                self.continuation_lines[continuation_number]["more"] = (
+                    self.continuation_lines[continuation_number]["more"]
                     + " "
                     + continuation
                 )
@@ -176,13 +176,13 @@ class DB2LogParser:
         elif third[-4] == " " and DB2LogParser.find_number.match(third[-3:]):
             continuation_number = int(third[-3:])
             start_of_line = third[:-4]
-            if continuation_number in continuation_lines:
-                writer.writerow(
+            if continuation_number in self.continuation_lines:
+                self.writer.writerow(
                     DB2LogParser._db2_csv_row(
-                        **continuation_lines[continuation_number]
+                        **self.continuation_lines[continuation_number]
                     )
                 )
-            continuation_lines[continuation_number] = {
+            self.continuation_lines[continuation_number] = {
                 "day": self.current_line_day,
                 "month": self.current_line_month,
                 "year": self.current_line_year,
@@ -191,9 +191,14 @@ class DB2LogParser:
                 "more": start_of_line.strip("\r\n \t"),
             }
         else:
-            writer.writerow(
+            self.writer.writerow(
                 DB2LogParser._db2_csv_row(
-                    year, month, day, time, second, third
+                    self.current_line_year,
+                    self.current_line_month,
+                    self.current_line_day,
+                    self.current_line_time,
+                    second,
+                    third
                 )
             )
         return next_line
@@ -206,7 +211,7 @@ class DB2LogParser:
         line = self.reader.readline()
         while line != "":
             line = self._attempt_process_line(line)
-        self._flush_continuation_lines(self.writer)
+        self._flush_continuation_lines()
 
 
 def db2_log_to_csv(log_file, csv_file):
