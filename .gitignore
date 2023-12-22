@@ -5,3 +5,5 @@
 *.tsv
 *.TSV
 .slime_paste
+ve/
+*.pyc
