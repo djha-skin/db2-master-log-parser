@@ -179,7 +179,7 @@ def db2_log_to_csv(log_file, csv_file):
         )
         writer.writeheader()
         with open(log_file, "r") as g:
-            readline()
+            g.readline()
             g.readline()
             line_number = 2
             line = None
